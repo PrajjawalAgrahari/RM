@@ -1,0 +1,66 @@
+# Environment variables and secrets
+.env
+.env.local
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Model files
+*.pkl
+*.joblib
+*.h5
+*.pth
+*.bin
+
+# Vector database files
+faiss_index.bin
+embeddings.pkl
+chunk_metadata.json
+processed_chunks.json
+processed_chunks.jsonl
+
+# Logs
+*.log
+
+# Data files (if containing sensitive information)
+# Uncomment if your datasets contain sensitive data
+# Datasets/
+# Research Papers/
