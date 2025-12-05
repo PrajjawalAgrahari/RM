@@ -22,20 +22,19 @@ class ChildContextManager:
             "created_at": datetime.now().isoformat(),
             "child_profile": {
                 "age": initial_data.get("age"),
-                "gender": "Male" if initial_data.get("gender") == '1' else "Female",
-                "ethnicity": initial_data.get("ethnicity", "Not specified"),
-                "jaundice_history": initial_data.get("jundice") == '1',
-                "family_asd_history": initial_data.get("austim") == '1',
-                "relation": initial_data.get("relation", "Parent"),
-                "country": initial_data.get("contry_of_res", "Not specified")
+                "sex": initial_data.get("sex", "Not specified"),
+                "urban_rural": initial_data.get("urban_rural", "Not specified"),
+                "siblings_asd": initial_data.get("siblings_asd") == '1',
+                "speech_delay": initial_data.get("speech_delay") == '1',
+                "parental_concern": initial_data.get("parental_concern", "Not specified")
             },
             "initial_screening": {
                 "timestamp": datetime.now().isoformat(),
                 "questions": {
-                    f"A{i}_Score": int(initial_data.get(f"A{i}_Score", 0))
-                    for i in range(1, 11)
+                    f"Q{i}": int(initial_data.get(f"Q{i}", 0))
+                    for i in range(1, 31)
                 },
-                "total_score": sum(int(initial_data.get(f"A{i}_Score", 0)) for i in range(1, 11)),
+                "total_score": sum(int(initial_data.get(f"Q{i}", 0)) for i in range(1, 31)),
                 "result": None  # Will be filled after prediction
             },
             "symptom_severity": {},
@@ -50,9 +49,11 @@ class ChildContextManager:
                 "max_followups": 12,  # Ask up to 12 follow-ups
                 "questions_per_area": {
                     "social_communication": 0,
+                    "verbal_nonverbal_communication": 0,
+                    "behaviour_routine": 0,
                     "sensory_processing": 0,
-                    "emotional_recognition": 0,
-                    "social_interaction": 0
+                    "motor_skills": 0,
+                    "emotional_understanding": 0
                 },
                 "suggested_followups": [],  # Current suggested follow-ups
                 "last_clicked_followup": None,
@@ -83,14 +84,16 @@ class ChildContextManager:
             )
     
     def analyze_symptom_severity(self, questions: Dict) -> Dict:
-        """Categorize and assess symptom severity"""
+        """Categorize and assess symptom severity based on new 30-question structure"""
         
-        # Symptom categories mapping
+        # Symptom categories mapping (6 categories, 30 questions total)
         categories = {
-            "social_communication": ["A3_Score", "A5_Score", "A6_Score"],
-            "sensory_processing": ["A1_Score", "A2_Score"],
-            "emotional_recognition": ["A7_Score", "A9_Score"],
-            "social_interaction": ["A4_Score", "A8_Score", "A10_Score"]
+            "social_communication": ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6"],  # 6 questions
+            "verbal_nonverbal_communication": ["Q7", "Q8", "Q9", "Q10", "Q11"],  # 5 questions
+            "behaviour_routine": ["Q12", "Q13", "Q14", "Q15", "Q16", "Q17"],  # 6 questions
+            "sensory_processing": ["Q18", "Q19", "Q20", "Q21", "Q22"],  # 5 questions
+            "motor_skills": ["Q23", "Q24", "Q25", "Q26"],  # 4 questions
+            "emotional_understanding": ["Q27", "Q28", "Q29", "Q30"]  # 4 questions
         }
         
         severity = {}
@@ -98,6 +101,7 @@ class ChildContextManager:
             score = sum(questions.get(q, 0) for q in question_ids)
             total_questions = len(question_ids)
             
+            # Calculate severity based on percentage of "Yes" responses
             if score >= total_questions * 0.7:
                 severity[category] = "high"
             elif score >= total_questions * 0.4:
@@ -139,22 +143,24 @@ class ChildContextManager:
         summary = f"""
 CHILD PROFILE:
 - Age: {profile['age']} years old
-- Gender: {profile['gender']}
-- Relation: {profile['relation']}
-- Country: {profile['country']}
-- Jaundice at birth: {'Yes' if profile['jaundice_history'] else 'No'}
-- Family ASD history: {'Yes' if profile['family_asd_history'] else 'No'}
+- Sex: {profile['sex']}
+- Residential Area: {profile['urban_rural']}
+- Siblings with ASD: {'Yes' if profile['siblings_asd'] else 'No'}
+- Speech Delay: {'Yes' if profile['speech_delay'] else 'No'}
+- Parental Concern Level: {profile['parental_concern']}
 
 INITIAL SCREENING RESULTS:
 - Prediction: {result_info.get('prediction', 'Pending')}
 - Confidence: {result_info.get('confidence', 'N/A')}
-- Total Score: {sum(screening['questions'].values())}/10
+- Total Score: {sum(screening['questions'].values())}/30
 
 SYMPTOM SEVERITY ANALYSIS:
 - Social Communication: {severity.get('social_communication', 'Unknown').upper()}
+- Verbal & Non-Verbal Communication: {severity.get('verbal_nonverbal_communication', 'Unknown').upper()}
+- Behaviour & Routine Patterns: {severity.get('behaviour_routine', 'Unknown').upper()}
 - Sensory Processing: {severity.get('sensory_processing', 'Unknown').upper()}
-- Emotional Recognition: {severity.get('emotional_recognition', 'Unknown').upper()}
-- Social Interaction: {severity.get('social_interaction', 'Unknown').upper()}
+- Motor Skills: {severity.get('motor_skills', 'Unknown').upper()}
+- Emotional Understanding & Social Behaviour: {severity.get('emotional_understanding', 'Unknown').upper()}
 
 EXTRACTED CHILD INSIGHTS:
 {self.get_child_insights_summary(session_id)}

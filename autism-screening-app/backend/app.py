@@ -28,7 +28,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Configure Gemini API
-api_key = os.getenv('GEMINI_API_KEY')
+api_key = 'AIzaSyBnFZEOukUOfV42r719Bfa892x3bS8BrXo'
 if api_key:
     genai.configure(api_key=api_key)
     logger.info("✓ Gemini API configured")
@@ -37,15 +37,13 @@ else:
 
 # Load the trained model and preprocessing objects
 try:
-    model = joblib.load('svm_child_asd_model.pkl')
-    scaler = joblib.load('scaler.pkl')
-    label_encoders = joblib.load('label_encoders.pkl')
-    logger.info("✓ ML model loaded")
+    # Load model from asd_model_output directory (two levels up from backend folder)
+    model_path = Path(__file__).parent.parent.parent / "asd_model_output"
+    model = joblib.load(model_path / 'random_forest_pipeline.pkl')
+    logger.info("✓ Random Forest model loaded from asd_model_output")
 except Exception as e:
     logger.error(f"❌ Model loading failed: {e}")
     model = None
-    scaler = None
-    label_encoders = None
 
 # Initialize managers
 context_manager = ChildContextManager()
@@ -149,7 +147,7 @@ def get_gemini_insights(prediction_data: Dict[str, Any], form_data: Dict[str, An
     """
     try:
         # Check if API key is available
-        if not os.getenv('GEMINI_API_KEY'):
+        if not os.getenv('GEMINI_API_KEY') and not api_key:
             print("No Gemini API key found, using fallback insights")
             raise ValueError("No API key configured")
         
@@ -170,32 +168,66 @@ def get_gemini_insights(prediction_data: Dict[str, Any], form_data: Dict[str, An
         - No ASD Probability: {prediction_data['probability_no_asd']}
 
         CHILD DEMOGRAPHICS:
-        - Age: {form_data['age']} years
-        - Gender: {'Male' if form_data['gender'] == 1 else 'Female'}
-        - Born with jaundice: {'Yes' if form_data['jundice'] == 1 else 'No'}
-        - Family history of ASD: {'Yes' if form_data['austim'] == 1 else 'No'}
+        - Age: {form_data.get('age', 'N/A')} years
+        - Sex: {form_data.get('sex', 'N/A').capitalize()}
+        - Residential Area: {form_data.get('urban_rural', 'N/A').capitalize()}
+        - Siblings with ASD: {'Yes' if form_data.get('siblings_asd') == '1' else 'No'}
+        - Speech Delay: {'Yes' if form_data.get('speech_delay') == '1' else 'No'}
+        - Parental Concern Level: {form_data.get('parental_concern', 'N/A').capitalize()}
 
-        SCREENING QUESTIONS RESPONSES:
-        - Q1 (Notices small sounds): {'Yes' if form_data['A1_Score'] == 1 else 'No'}
-        - Q2 (Concentrates on whole picture): {'Yes' if form_data['A2_Score'] == 1 else 'No'}
-        - Q3 (Keeps track of conversations): {'Yes' if form_data['A3_Score'] == 1 else 'No'}
-        - Q4 (Easy to switch activities): {'Yes' if form_data['A4_Score'] == 1 else 'No'}
-        - Q5 (Doesn't know how to keep conversation): {'Yes' if form_data['A5_Score'] == 1 else 'No'}
-        - Q6 (Good at social chit-chat): {'Yes' if form_data['A6_Score'] == 1 else 'No'}
-        - Q7 (Difficult to work out character intentions): {'Yes' if form_data['A7_Score'] == 1 else 'No'}
-        - Q8 (Enjoyed pretend play in preschool): {'Yes' if form_data['A8_Score'] == 1 else 'No'}
-        - Q9 (Easy to work out emotions from faces): {'Yes' if form_data['A9_Score'] == 1 else 'No'}
-        - Q10 (Hard to make new friends): {'Yes' if form_data['A10_Score'] == 1 else 'No'}
+        SCREENING QUESTIONS SUMMARY (30 Questions across 6 categories):
+        
+        Social Communication:
+        - Q1 (Avoids eye contact): {'Yes' if form_data.get('Q1') == '1' else 'No'}
+        - Q2 (Struggles with social cues): {'Yes' if form_data.get('Q2') == '1' else 'No'}
+        - Q3 (Rarely initiates interaction): {'Yes' if form_data.get('Q3') == '1' else 'No'}
+        - Q4 (Prefers playing alone): {'Yes' if form_data.get('Q4') == '1' else 'No'}
+        - Q5 (Difficulty with turn-taking): {'Yes' if form_data.get('Q5') == '1' else 'No'}
+        - Q6 (Takes language literally): {'Yes' if form_data.get('Q6') == '1' else 'No'}
+        
+        Verbal & Non-Verbal Communication:
+        - Q7 (Limited gestures): {'Yes' if form_data.get('Q7') == '1' else 'No'}
+        - Q8 (Echolalia): {'Yes' if form_data.get('Q8') == '1' else 'No'}
+        - Q9 (Struggles to explain feelings): {'Yes' if form_data.get('Q9') == '1' else 'No'}
+        - Q10 (Monotone speech): {'Yes' if form_data.get('Q10') == '1' else 'No'}
+        - Q11 (Difficulty with multi-step instructions): {'Yes' if form_data.get('Q11') == '1' else 'No'}
+        
+        Behaviour & Routine Patterns:
+        - Q12 (Upset by routine changes): {'Yes' if form_data.get('Q12') == '1' else 'No'}
+        - Q13 (Insists on specific ways): {'Yes' if form_data.get('Q13') == '1' else 'No'}
+        - Q14 (Repetitive movements): {'Yes' if form_data.get('Q14') == '1' else 'No'}
+        - Q15 (Strong fixations): {'Yes' if form_data.get('Q15') == '1' else 'No'}
+        - Q16 (Lines up toys): {'Yes' if form_data.get('Q16') == '1' else 'No'}
+        - Q17 (Overly focused, struggles to shift): {'Yes' if form_data.get('Q17') == '1' else 'No'}
+        
+        Sensory Processing:
+        - Q18 (Strong sensory reactions): {'Yes' if form_data.get('Q18') == '1' else 'No'}
+        - Q19 (Covers ears frequently): {'Yes' if form_data.get('Q19') == '1' else 'No'}
+        - Q20 (Avoids certain clothes): {'Yes' if form_data.get('Q20') == '1' else 'No'}
+        - Q21 (Seeks sensory input): {'Yes' if form_data.get('Q21') == '1' else 'No'}
+        - Q22 (Unusual food preferences): {'Yes' if form_data.get('Q22') == '1' else 'No'}
+        
+        Motor Skills:
+        - Q23 (Difficulty with fine motor tasks): {'Yes' if form_data.get('Q23') == '1' else 'No'}
+        - Q24 (Appears clumsy): {'Yes' if form_data.get('Q24') == '1' else 'No'}
+        - Q25 (Delayed motor milestones): {'Yes' if form_data.get('Q25') == '1' else 'No'}
+        - Q26 (Unusual motor mannerisms): {'Yes' if form_data.get('Q26') == '1' else 'No'}
+        
+        Emotional Understanding & Social Behaviour:
+        - Q27 (Struggles to understand others' feelings): {'Yes' if form_data.get('Q27') == '1' else 'No'}
+        - Q28 (Overreacts to minor changes): {'Yes' if form_data.get('Q28') == '1' else 'No'}
+        - Q29 (Avoids physical affection): {'Yes' if form_data.get('Q29') == '1' else 'No'}
+        - Q30 (Difficulty forming friendships): {'Yes' if form_data.get('Q30') == '1' else 'No'}
 
         Please provide:
         1. SEVERITY ASSESSMENT: Based on the screening results, assess the severity level (Low Risk, Moderate Risk, High Risk)
-        2. KEY FINDINGS: Highlight the most significant behavioral indicators from the responses
+        2. KEY FINDINGS: Highlight the most significant behavioral indicators from the responses across all 6 categories
         3. RECOMMENDATIONS: Provide specific, actionable next steps for parents/caregivers
         4. FOLLOW-UP: Suggest appropriate professional consultations or further assessments
 
         Format your response as a JSON with the following keys:
         - severity: string (Low Risk/Moderate Risk/High Risk)
-        - key_findings: string (2-3 bullet points)
+        - key_findings: string (2-3 bullet points highlighting key concerns across categories)
         - recommendations: string (3-4 specific actionable recommendations)
         - follow_up: string (professional consultation suggestions)
 
@@ -257,7 +289,7 @@ def index():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    if model is None or scaler is None:
+    if model is None:
         return jsonify({'error': 'Model not loaded properly'}), 500
 
     try:
@@ -271,48 +303,100 @@ def predict():
         session_id = context_manager.create_session(data)
         logger.info(f"✓ Session created: {session_id[:8]}...")
         
-        # Extract features in the correct order
-        features = [
-            float(data.get('A1_Score', 0)),
-            float(data.get('A2_Score', 0)),
-            float(data.get('A3_Score', 0)),
-            float(data.get('A4_Score', 0)),
-            float(data.get('A5_Score', 0)),
-            float(data.get('A6_Score', 0)),
-            float(data.get('A7_Score', 0)),
-            float(data.get('A8_Score', 0)),
-            float(data.get('A9_Score', 0)),
-            float(data.get('A10_Score', 0)),
-            float(data.get('age', 0)),
-            float(data.get('gender', 0)),  # Assuming encoded: 0=Female, 1=Male
-            float(data.get('jundice', 0)),  # 0=No, 1=Yes
-            float(data.get('austim', 0)),   # 0=No, 1=Yes
-            float(data.get('used_app_before', 0)),  # 0=No, 1=Yes
-            float(data.get('result', 0))    # Sum of A1-A10 scores
-        ]
+        # Prepare input data for the model in the correct format
+        # The pipeline expects raw categorical columns and will handle encoding internally
         
-        # Convert to numpy array and reshape
-        features_array = np.array(features).reshape(1, -1)
-
-        # Scale features
-        features_scaled = scaler.transform(features_array)
+        input_data = {
+            # All 30 questions
+            'Q1': int(data.get('Q1', 0)),
+            'Q2': int(data.get('Q2', 0)),
+            'Q3': int(data.get('Q3', 0)),
+            'Q4': int(data.get('Q4', 0)),
+            'Q5': int(data.get('Q5', 0)),
+            'Q6': int(data.get('Q6', 0)),
+            'Q7': int(data.get('Q7', 0)),
+            'Q8': int(data.get('Q8', 0)),
+            'Q9': int(data.get('Q9', 0)),
+            'Q10': int(data.get('Q10', 0)),
+            'Q11': int(data.get('Q11', 0)),
+            'Q12': int(data.get('Q12', 0)),
+            'Q13': int(data.get('Q13', 0)),
+            'Q14': int(data.get('Q14', 0)),
+            'Q15': int(data.get('Q15', 0)),
+            'Q16': int(data.get('Q16', 0)),
+            'Q17': int(data.get('Q17', 0)),
+            'Q18': int(data.get('Q18', 0)),
+            'Q19': int(data.get('Q19', 0)),
+            'Q20': int(data.get('Q20', 0)),
+            'Q21': int(data.get('Q21', 0)),
+            'Q22': int(data.get('Q22', 0)),
+            'Q23': int(data.get('Q23', 0)),
+            'Q24': int(data.get('Q24', 0)),
+            'Q25': int(data.get('Q25', 0)),
+            'Q26': int(data.get('Q26', 0)),
+            'Q27': int(data.get('Q27', 0)),
+            'Q28': int(data.get('Q28', 0)),
+            'Q29': int(data.get('Q29', 0)),
+            'Q30': int(data.get('Q30', 0)),
+            
+            # Demographic features (raw values - pipeline will encode them)
+            'age': int(data.get('age', 0)),
+            'speech_delay': int(data.get('speech_delay', 0)),
+            'siblings_asd': int(data.get('siblings_asd', 0)),
+            'sex': data.get('sex', 'male'),  # Raw categorical value
+            'urban_rural': data.get('urban_rural', 'urban'),  # Raw categorical value
+            'parental_concern': data.get('parental_concern', 'low')  # Raw categorical value
+        }
         
-        # Make prediction
-        prediction = model.predict(features_scaled)[0]
-        prediction_proba = model.predict_proba(features_scaled)[0]
+        # Convert to DataFrame for the pipeline
+        import pandas as pd
+        input_df = pd.DataFrame([input_data])
         
-        # Convert prediction to readable format
-        result = "ASD Traits Detected" if prediction == 1 else "No ASD Traits Detected"
-        confidence = max(prediction_proba) * 100
+        logger.info(f"✓ Input prepared with {len(input_data)} features")
+        logger.info(f"✓ Categorical values: sex={input_data['sex']}, urban_rural={input_data['urban_rural']}, parental_concern={input_data['parental_concern']}")
+        
+        # Make prediction using the pipeline
+        prediction = model.predict(input_df)[0]
+        prediction_proba = model.predict_proba(input_df)[0]
+        
+        # Log the raw prediction values for debugging
+        logger.info(f"🔍 Raw prediction: {prediction}")
+        logger.info(f"🔍 Raw probabilities: {prediction_proba}")
+        logger.info(f"🔍 Prediction shape: {prediction_proba.shape}, classes: {model.classes_ if hasattr(model, 'classes_') else 'N/A'}")
+        
+        # The model predicts 0=Low, 1=Moderate, 2=High risk
+        # For binary ASD/No-ASD display, we consider:
+        # - Low risk (0) = No ASD
+        # - Moderate (1) or High (2) = ASD detected
+        
+        # Calculate combined probabilities
+        if len(prediction_proba) == 3:
+            # 3-class model: Low, Moderate, High
+            prob_no_asd = prediction_proba[0] * 100  # Low risk
+            prob_asd = (prediction_proba[1] + prediction_proba[2]) * 100  # Moderate + High
+            
+            # Determine result
+            if prediction == 0:
+                result = "No ASD Traits Detected"
+            else:
+                result = "ASD Traits Detected"
+        else:
+            # Binary model fallback
+            prob_no_asd = prediction_proba[0] * 100
+            prob_asd = prediction_proba[1] * 100
+            result = "ASD Traits Detected" if prediction == 1 else "No ASD Traits Detected"
+        
+        confidence = max(prob_no_asd, prob_asd)
         
         prediction_data = {
             'prediction': result,
             'confidence': round(confidence, 2),
-            'probability_asd': round(prediction_proba[1]*100, 2),
-            'probability_no_asd': round(prediction_proba[0]*100, 2)
+            'probability_asd': round(prob_asd, 2),
+            'probability_no_asd': round(prob_no_asd, 2)
         }
         
         logger.info(f"✓ Prediction: {result} ({confidence:.1f}%)")
+        logger.info(f"✓ Probabilities: ASD={prob_asd:.1f}%, No ASD={prob_no_asd:.1f}%")
         
         # Update session with prediction results
         context_manager.update_prediction(session_id, prediction_data)

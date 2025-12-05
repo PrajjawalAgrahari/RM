@@ -2,39 +2,91 @@ import { useState } from 'react';
 import axios from 'axios';
 import './App.css';
 
-const QUESTIONS = [
-  { id: 'A1_Score', text: 'S/he often notices small sounds when others do not' },
-  { id: 'A2_Score', text: 'S/he usually concentrates more on the whole picture, rather than the small details' },
-  { id: 'A3_Score', text: 'In a social group, s/he can easily keep track of several different people\'s conversations' },
-  { id: 'A4_Score', text: 'S/he finds it easy to go back and forth between different activities' },
-  { id: 'A5_Score', text: 'S/he doesn\'t know how to keep a conversation going with his/her peers' },
-  { id: 'A6_Score', text: 'S/he is good at social chit-chat' },
-  { id: 'A7_Score', text: 'When s/he is read a story, s/he finds it difficult to work out the character\'s intentions or feelings' },
-  { id: 'A8_Score', text: 'When s/he was in preschool, s/he used to enjoy playing games involving pretending with other children' },
-  { id: 'A9_Score', text: 'S/he finds it easy to work out what someone is thinking or feeling just by looking at their face' },
-  { id: 'A10_Score', text: 'S/he finds it hard to make new friends' }
-];
+const QUESTION_CATEGORIES = {
+  'Social Communication': [
+    { id: 'Q1', text: 'Does the child avoid making eye contact during conversations?' },
+    { id: 'Q2', text: 'Does the child struggle to understand social cues (e.g., facial expressions, tone)?' },
+    { id: 'Q3', text: 'Does the child rarely initiate conversation or social interaction with peers?' },
+    { id: 'Q4', text: 'Does the child prefer playing alone rather than with other children?' },
+    { id: 'Q5', text: 'Does the child have difficulty maintaining turn-taking in conversations or games?' },
+    { id: 'Q6', text: 'Does the child take language very literally and struggle with jokes or sarcasm?' }
+  ],
+  'Verbal & Non-Verbal Communication': [
+    { id: 'Q7', text: 'Does the child use limited gestures (pointing, waving) when communicating?' },
+    { id: 'Q8', text: 'Does the child repeat phrases or sentences (echolalia)?' },
+    { id: 'Q9', text: 'Does the child struggle to explain what they feel or want?' },
+    { id: 'Q10', text: 'Does the child speak in a monotone or unusual rhythm?' },
+    { id: 'Q11', text: 'Does the child have difficulty understanding multi-step verbal instructions?' }
+  ],
+  'Behaviour & Routine Patterns': [
+    { id: 'Q12', text: 'Does the child get upset when routine or familiar patterns change?' },
+    { id: 'Q13', text: 'Does the child insist on doing tasks in a very specific way?' },
+    { id: 'Q14', text: 'Does the child show repetitive movements (hand-flapping, rocking, spinning)?' },
+    { id: 'Q15', text: 'Does the child have strong fixations on certain topics or objects?' },
+    { id: 'Q16', text: 'Does the child line up toys or arrange objects in a specific order repeatedly?' },
+    { id: 'Q17', text: 'Does the child get overly focused on one task and struggle to shift attention?' }
+  ],
+  'Sensory Processing': [
+    { id: 'Q18', text: 'Does the child react strongly to loud sounds, bright lights, or specific textures?' },
+    { id: 'Q19', text: 'Does the child cover their ears frequently even when sounds are normal?' },
+    { id: 'Q20', text: 'Does the child avoid certain clothes due to texture discomfort?' },
+    { id: 'Q21', text: 'Does the child seek strong sensory input (jumping, spinning, crashing into things)?' },
+    { id: 'Q22', text: 'Does the child have unusual food preferences based mainly on texture or smell?' }
+  ],
+  'Motor Skills': [
+    { id: 'Q23', text: 'Does the child have difficulty with fine motor tasks (buttoning, writing, using scissors)?' },
+    { id: 'Q24', text: 'Does the child appear clumsy or have poor coordination compared to peers?' },
+    { id: 'Q25', text: 'Does the child show delayed development in basic motor milestones?' },
+    { id: 'Q26', text: 'Does the child exhibit unusual motor mannerisms (finger flicking, pacing)?' }
+  ],
+  'Emotional Understanding & Social Behaviour': [
+    { id: 'Q27', text: 'Does the child struggle to understand other people\'s feelings or perspectives?' },
+    { id: 'Q28', text: 'Does the child overreact to minor changes or small frustrations?' },
+    { id: 'Q29', text: 'Does the child avoid physical affection (hugs, touch) even with family?' },
+    { id: 'Q30', text: 'Does the child have difficulty forming or maintaining friendships?' }
+  ]
+};
+
+const QUESTIONS = Object.values(QUESTION_CATEGORIES).flat();
 
 function App() {
   const [formData, setFormData] = useState({
     age: '',
-    gender: '',
-    ethnicity: '',
-    jundice: '',
-    austim: '',
-    contry_of_res: '',
-    used_app_before: '',
-    relation: '',
-    A1_Score: '',
-    A2_Score: '',
-    A3_Score: '',
-    A4_Score: '',
-    A5_Score: '',
-    A6_Score: '',
-    A7_Score: '',
-    A8_Score: '',
-    A9_Score: '',
-    A10_Score: ''
+    sex: '',
+    urban_rural: '',
+    siblings_asd: '',
+    speech_delay: '',
+    parental_concern: '',
+    Q1: '',
+    Q2: '',
+    Q3: '',
+    Q4: '',
+    Q5: '',
+    Q6: '',
+    Q7: '',
+    Q8: '',
+    Q9: '',
+    Q10: '',
+    Q11: '',
+    Q12: '',
+    Q13: '',
+    Q14: '',
+    Q15: '',
+    Q16: '',
+    Q17: '',
+    Q18: '',
+    Q19: '',
+    Q20: '',
+    Q21: '',
+    Q22: '',
+    Q23: '',
+    Q24: '',
+    Q25: '',
+    Q26: '',
+    Q27: '',
+    Q28: '',
+    Q29: '',
+    Q30: ''
   });
 
   const [result, setResult] = useState(null);
@@ -218,46 +270,41 @@ function App() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="gender">Gender *</label>
+                <label htmlFor="sex">Sex *</label>
                 <select
-                  id="gender"
-                  name="gender"
-                  value={formData.gender}
+                  id="sex"
+                  name="sex"
+                  value={formData.sex}
                   onChange={handleChange}
                   required
                 >
-                  <option value="">Select gender</option>
-                  <option value="1">Male</option>
-                  <option value="0">Female</option>
+                  <option value="">Select sex</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
                 </select>
               </div>
 
               <div className="form-group">
-                <label htmlFor="ethnicity">Ethnicity *</label>
+                <label htmlFor="urban_rural">Residential Area *</label>
                 <select
-                  id="ethnicity"
-                  name="ethnicity"
-                  value={formData.ethnicity}
+                  id="urban_rural"
+                  name="urban_rural"
+                  value={formData.urban_rural}
                   onChange={handleChange}
                   required
                 >
-                  <option value="">Select ethnicity</option>
-                  <option value="White-European">White European</option>
-                  <option value="Asian">Asian</option>
-                  <option value="Middle Eastern">Middle Eastern</option>
-                  <option value="Black">Black</option>
-                  <option value="Hispanic">Hispanic</option>
-                  <option value="South Asian">South Asian</option>
-                  <option value="Others">Others</option>
+                  <option value="">Select residential area</option>
+                  <option value="urban">Urban</option>
+                  <option value="rural">Rural</option>
                 </select>
               </div>
 
               <div className="form-group">
-                <label htmlFor="jundice">Was the child born with jaundice? *</label>
+                <label htmlFor="siblings_asd">Siblings with ASD? *</label>
                 <select
-                  id="jundice"
-                  name="jundice"
-                  value={formData.jundice}
+                  id="siblings_asd"
+                  name="siblings_asd"
+                  value={formData.siblings_asd}
                   onChange={handleChange}
                   required
                 >
@@ -268,11 +315,11 @@ function App() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="austim">Family history of ASD? *</label>
+                <label htmlFor="speech_delay">Speech Delay? *</label>
                 <select
-                  id="austim"
-                  name="austim"
-                  value={formData.austim}
+                  id="speech_delay"
+                  name="speech_delay"
+                  value={formData.speech_delay}
                   onChange={handleChange}
                   required
                 >
@@ -283,47 +330,18 @@ function App() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="contry_of_res">Country of Residence *</label>
-                <input
-                  type="text"
-                  id="contry_of_res"
-                  name="contry_of_res"
-                  value={formData.contry_of_res}
-                  onChange={handleChange}
-                  required
-                  placeholder="e.g., United States"
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="used_app_before">Used screening app before? *</label>
+                <label htmlFor="parental_concern">Parental Concern Level *</label>
                 <select
-                  id="used_app_before"
-                  name="used_app_before"
-                  value={formData.used_app_before}
+                  id="parental_concern"
+                  name="parental_concern"
+                  value={formData.parental_concern}
                   onChange={handleChange}
                   required
                 >
-                  <option value="">Select</option>
-                  <option value="1">Yes</option>
-                  <option value="0">No</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="relation">Relation to child *</label>
-                <select
-                  id="relation"
-                  name="relation"
-                  value={formData.relation}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">Select relation</option>
-                  <option value="Parent">Parent</option>
-                  <option value="Health care professional">Health care professional</option>
-                  <option value="Relative">Relative</option>
-                  <option value="Others">Others</option>
+                  <option value="">Select concern level</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
                 </select>
               </div>
             </section>
@@ -332,36 +350,41 @@ function App() {
               <h2>Screening Questions</h2>
               <p className="instructions">Please answer the following questions about the child's behavior. Select "Yes" or "No" for each question.</p>
               
-              {QUESTIONS.map((question, index) => (
-                <div key={question.id} className="question-group">
-                  <label className="question-label">
-                    <span className="question-number">Q{index + 1}.</span>
-                    <span className="question-text">{question.text}</span>
-                  </label>
-                  <div className="radio-group">
-                    <label className="radio-label">
-                      <input
-                        type="radio"
-                        name={question.id}
-                        value="1"
-                        checked={formData[question.id] === '1'}
-                        onChange={handleChange}
-                        required
-                      />
-                      <span>Yes</span>
-                    </label>
-                    <label className="radio-label">
-                      <input
-                        type="radio"
-                        name={question.id}
-                        value="0"
-                        checked={formData[question.id] === '0'}
-                        onChange={handleChange}
-                        required
-                      />
-                      <span>No</span>
-                    </label>
-                  </div>
+              {Object.entries(QUESTION_CATEGORIES).map(([category, questions]) => (
+                <div key={category} className="category-section">
+                  <h3 className="category-title">{category}</h3>
+                  {questions.map((question) => (
+                    <div key={question.id} className="question-group">
+                      <label className="question-label">
+                        <span className="question-number">{question.id}.</span>
+                        <span className="question-text">{question.text}</span>
+                      </label>
+                      <div className="radio-group">
+                        <label className="radio-label">
+                          <input
+                            type="radio"
+                            name={question.id}
+                            value="1"
+                            checked={formData[question.id] === '1'}
+                            onChange={handleChange}
+                            required
+                          />
+                          <span>Yes</span>
+                        </label>
+                        <label className="radio-label">
+                          <input
+                            type="radio"
+                            name={question.id}
+                            value="0"
+                            checked={formData[question.id] === '0'}
+                            onChange={handleChange}
+                            required
+                          />
+                          <span>No</span>
+                        </label>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ))}
             </section>
@@ -395,16 +418,16 @@ function App() {
                   <span className="info-value">{formData.age} years</span>
                 </div>
                 <div className="info-item">
-                  <span className="info-label">Gender:</span>
-                  <span className="info-value">{formData.gender === '1' ? 'Male' : 'Female'}</span>
+                  <span className="info-label">Sex:</span>
+                  <span className="info-value">{formData.sex === 'male' ? 'Male' : 'Female'}</span>
                 </div>
                 <div className="info-item">
-                  <span className="info-label">Ethnicity:</span>
-                  <span className="info-value">{formData.ethnicity}</span>
+                  <span className="info-label">Residential Area:</span>
+                  <span className="info-value">{formData.urban_rural === 'urban' ? 'Urban' : 'Rural'}</span>
                 </div>
                 <div className="info-item">
-                  <span className="info-label">Country:</span>
-                  <span className="info-value">{formData.contry_of_res}</span>
+                  <span className="info-label">Speech Delay:</span>
+                  <span className="info-value">{formData.speech_delay === '1' ? 'Yes' : 'No'}</span>
                 </div>
               </div>
             </div>

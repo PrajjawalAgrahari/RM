@@ -10,19 +10,19 @@ import random
 class FollowUpGenerator:
     """Generates intelligent follow-up questions balanced across all symptom domains"""
     
-    # Comprehensive question bank organized by domain and severity
+    # Comprehensive question bank organized by domain and severity (6 categories)
     QUESTIONS = {
         "social_communication": {
             "high": [
-                "Can you describe a recent situation where your child had difficulty starting or maintaining a conversation?",
+                "Can you describe a recent situation where your child avoided making eye contact during a conversation?",
                 "How does your child typically respond when peers try to talk to them?",
-                "Does your child understand sarcasm, jokes, or figures of speech?",
-                "How does your child share their interests or excitement with others?",
-                "Does your child use gestures (pointing, waving) when communicating?"
+                "Does your child initiate conversations or wait for others to start?",
+                "How does your child handle taking turns in conversations or games?",
+                "Does your child understand sarcasm, jokes, or figures of speech?"
             ],
             "moderate": [
                 "How often does your child initiate conversations with family members?",
-                "Does your child ask questions to learn more about topics they're interested in?",
+                "Does your child prefer playing alone or with other children?",
                 "How does your child react when someone doesn't understand what they're saying?"
             ],
             "low": [
@@ -30,58 +30,93 @@ class FollowUpGenerator:
                 "How does your child communicate when they need help?"
             ]
         },
-        "sensory_processing": {
+        "verbal_nonverbal_communication": {
             "high": [
-                "What specific sounds, textures, or sensations seem to overwhelm your child?",
-                "Does your child have strong preferences about clothing tags, seams, or fabrics?",
-                "How does your child react to unexpected loud noises (vacuum, siren, etc.)?",
-                "Are there certain foods your child refuses based on texture rather than taste?",
-                "Does your child seek out or avoid certain physical sensations (spinning, tight hugs, etc.)?"
+                "Does your child use gestures like pointing or waving when communicating?",
+                "Can you give examples of when your child repeats phrases or sentences?",
+                "How does your child express their feelings or needs when they're upset?",
+                "Does your child speak in a monotone voice or have an unusual speech rhythm?",
+                "How does your child handle multi-step instructions?"
             ],
             "moderate": [
-                "How does your child handle crowded or noisy environments like malls or parties?",
-                "Does your child notice smells or sounds that others might not?",
+                "How well does your child explain what they want or need?",
+                "Does your child combine verbal and non-verbal communication effectively?",
+                "How does your child respond to complex verbal instructions?"
+            ],
+            "low": [
+                "How does your child typically communicate their daily needs?",
+                "Does your child use facial expressions appropriately?"
+            ]
+        },
+        "behaviour_routine": {
+            "high": [
+                "How does your child react when their daily routine is changed unexpectedly?",
+                "Does your child insist on doing tasks in a very specific order or way?",
+                "Can you describe any repetitive movements your child makes (hand-flapping, rocking, spinning)?",
+                "What topics or objects is your child particularly fixated on?",
+                "Does your child line up toys or arrange objects in specific patterns?"
+            ],
+            "moderate": [
+                "How flexible is your child when it comes to changes in routine?",
+                "Does your child have specific rituals or routines they must follow?",
+                "How does your child react when interrupted during a focused activity?"
+            ],
+            "low": [
+                "Does your child have any preferred routines or activities?",
+                "How easily can your child transition between activities?"
+            ]
+        },
+        "sensory_processing": {
+            "high": [
+                "What specific sounds, lights, or textures cause strong reactions in your child?",
+                "Does your child frequently cover their ears even when sounds seem normal to others?",
+                "Are there certain clothing textures or tags that your child refuses to wear?",
+                "Does your child seek intense sensory experiences like jumping, spinning, or crashing?",
+                "Are there specific food textures or smells that your child strongly avoids?"
+            ],
+            "moderate": [
+                "How does your child handle crowded or noisy environments?",
+                "Does your child notice sensory details that others might miss?",
                 "Are there activities your child avoids due to sensory discomfort?"
             ],
             "low": [
                 "Does your child have any specific sensory preferences?",
-                "How does your child react to trying new foods?"
+                "How does your child react to trying new foods or textures?"
             ]
         },
-        "emotional_recognition": {
+        "motor_skills": {
             "high": [
-                "Can your child identify basic emotions (happy, sad, angry) in others by their facial expressions?",
-                "Does your child seem to understand when someone is upset or hurt without being told?",
-                "How does your child respond when they see someone crying or in distress?",
-                "Can your child explain how they're feeling when you ask them?",
-                "Does your child recognize when their behavior has upset someone?"
+                "What fine motor tasks does your child find particularly challenging (buttoning, writing, scissors)?",
+                "How would you describe your child's coordination compared to peers of the same age?",
+                "Can you describe any delays in motor milestones (walking, running, climbing)?",
+                "What unusual motor movements does your child display (finger flicking, pacing)?"
             ],
             "moderate": [
-                "Does your child pick up on subtle social cues like tone of voice or body language?",
-                "How well does your child understand other people's perspectives in stories or real situations?",
-                "Does your child show empathy when someone is hurt or sad?"
+                "How well does your child perform age-appropriate motor tasks?",
+                "Does your child have difficulty with activities requiring hand-eye coordination?",
+                "How is your child's balance and body awareness?"
+            ],
+            "low": [
+                "Are there any motor activities your child particularly enjoys or avoids?",
+                "How does your child perform with everyday motor tasks?"
+            ]
+        },
+        "emotional_understanding": {
+            "high": [
+                "Can your child identify basic emotions in others by looking at their faces?",
+                "Does your child understand when someone else is upset or hurt without being told?",
+                "How does your child respond to minor changes or small frustrations?",
+                "Does your child accept or avoid physical affection like hugs?",
+                "How easy is it for your child to make and maintain friendships?"
+            ],
+            "moderate": [
+                "Does your child pick up on subtle emotional cues from others?",
+                "How does your child handle social conflicts or disagreements?",
+                "Can your child understand other people's perspectives?"
             ],
             "low": [
                 "How does your child express their own emotions?",
-                "Does your child comfort others when they're upset?"
-            ]
-        },
-        "social_interaction": {
-            "high": [
-                "Does your child prefer to play alone or with others?",
-                "How does your child engage during playtime - do they prefer parallel play or interactive games?",
-                "Does your child show interest in what other children are doing or playing?",
-                "How does your child respond when invited to join a group activity?",
-                "Does your child initiate play with peers or wait to be invited?"
-            ],
-            "moderate": [
-                "How many close friendships does your child have?",
-                "Does your child understand concepts like sharing and taking turns?",
-                "How does your child handle conflicts or disagreements with peers?"
-            ],
-            "low": [
-                "Does your child enjoy group activities?",
-                "How does your child interact with siblings or cousins?"
+                "Does your child show empathy when others are upset?"
             ]
         }
     }
